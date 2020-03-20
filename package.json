@@ -1,0 +1,53 @@
+{
+	"name": "",
+	"version": "2.0.0",
+	"description": "",
+	"main": "cjs/index.js",
+	"module": "esm/index.js",
+	"types": "lib/index.d.ts",
+	"dependencies": {
+		"react": "^16.13.1"
+	},
+	"devDependencies": {
+		"packez": "^4.1.2",
+		"transform-es": "^5.0.0",
+		"typescript": "^3.8.3"
+	},
+	"files": [
+		"cjs",
+		"esm",
+		"lib",
+		"*.md"
+	],
+	"scripts": {
+		"docs": "packez build ./examples/index.js -d docs -c",
+		"start": "tsc -w",
+		"cjs": "transform-es src -d cjs -c -t cjs",
+		"esm": "transform-es src -d esm -c -t esm",
+		"tsc": "tsc",
+		"demo": "packez server ./examples/index.js -d dist -w -c",
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"build": "run-s tsc cjs esm docs"
+	},
+	"repository": {
+		"type": "git",
+		"url": ""
+	},
+	"keywords": [
+		"react-widget",
+		"form",
+		"react"
+	],
+	"author": "nobo.zhou@foxmail.com",
+	"license": "MIT",
+	"bugs": {
+		"url": ""
+	},
+	"homepage": "",
+	"browserslist": [
+		">0.25%",
+		"not dead",
+		"not ie <= 11",
+		"not op_mini all"
+	]
+}
