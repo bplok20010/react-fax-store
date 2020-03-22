@@ -1,20 +1,22 @@
-# rh-store
-sample react hook store 
+# react-fax-store
+react-fax-store
 
 ## Useage
 
 ```js
-import {rhs} from 'rh-store';
+import {createStore} from 'react-fax-store';
 
-const store = rhs.createContext({});
+
+
+const store = createStore({});
 
 function App(){
     const state = store.useState();
 }
 
-<Store.Provider>
+<store.Provider>
     <App />
-</Store.Provider>
+</store.Provider>
 
 
 ```

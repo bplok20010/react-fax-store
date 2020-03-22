@@ -1,16 +1,28 @@
 {
-	"name": "",
-	"version": "2.0.0",
-	"description": "",
+	"name": "react-fax-store",
+	"version": "0.1.0",
+	"description": "react-fax-store",
 	"main": "cjs/index.js",
 	"module": "esm/index.js",
 	"types": "lib/index.d.ts",
 	"dependencies": {
-		"react": "^16.13.1"
+		"react": "^16.13.1",
+		"with-component-hooks": "^1.0.0"
 	},
 	"devDependencies": {
+		"@types/enzyme": "^3.10.5",
+		"@types/enzyme-adapter-react-16": "^1.0.6",
+		"@types/jest": "^25.1.4",
+		"babel-plugin-transform-react-remove-prop-types": "^0.4.24",
+		"babel-preset-packez": "^1.0.0",
+		"enzyme": "^3.11.0",
+		"enzyme-adapter-react-16": "^1.15.2",
+		"jest": "^25.1.0",
+		"npm-run-all": "^4.1.5",
+		"p-defer": "^3.0.0",
 		"packez": "^4.1.2",
-		"transform-es": "^5.0.0",
+		"react-dom": "^16.13.1",
+		"transform-es": "^5.0.2",
 		"typescript": "^3.8.3"
 	},
 	"files": [
@@ -20,32 +32,32 @@
 		"*.md"
 	],
 	"scripts": {
-		"docs": "packez build ./examples/index.js -d docs -c",
+		"test": "jest",
+		"docs": "packez build ./examples/index.tsx -d docs -c",
 		"start": "tsc -w",
 		"cjs": "transform-es src -d cjs -c -t cjs",
 		"esm": "transform-es src -d esm -c -t esm",
 		"tsc": "tsc",
-		"demo": "packez server ./examples/index.js -d dist -w -c",
-		"test": "echo \"Error: no test specified\" && exit 1",
+		"demo": "packez server ./examples/index.tsx -d dist -w -c",
 		"build": "run-s tsc cjs esm docs"
 	},
 	"repository": {
 		"type": "git",
-		"url": ""
+		"url": "https://github.com/bplok20010/react-fax-store.git"
 	},
 	"keywords": [
-		"react-widget",
-		"form",
+        "react-store",
+		"react-fax-store",
 		"react"
 	],
 	"author": "nobo.zhou@foxmail.com",
 	"license": "MIT",
 	"bugs": {
-		"url": ""
+		"url": "https://github.com/bplok20010/react-fax-store/issues"
 	},
-	"homepage": "",
+	"homepage": "https://github.com/bplok20010/react-fax-store",
 	"browserslist": [
-		">0.25%",
+		">0.2%",
 		"not dead",
 		"not ie <= 11",
 		"not op_mini all"
