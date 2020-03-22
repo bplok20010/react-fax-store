@@ -8,6 +8,7 @@ export type UseSelector<T = {}> = <S extends (state: T) => any>(selector: S) => 
 export type UseUpdate<T = {}> = () => Update<T>;
 export type UseState<T = {}> = () => T;
 export type UseProvider<T> = () => Provider<T>;
+export type Context<T> = React.Context<T>;
 
 export interface ConsumerProps<T = {}> {
 	children: (state: T) => React.ReactElement | null;
@@ -20,7 +21,8 @@ export interface Provider<T = {}> extends React.Component<{}, T> {
 	subscribe(subscriber: Subscriber<T>): () => void;
 }
 
-export interface Context<T = {}> {
+export interface Store<T = {}> {
+	Context: Context<T>; //Omit<Context<T>, "Provider">;
 	Provider: new (props: {}) => Provider<T>;
 	Consumer: Consumer<T>;
 	useProvider: UseProvider<T>;
@@ -29,15 +31,36 @@ export interface Context<T = {}> {
 	useUpdate: UseUpdate<T>;
 }
 
+interface StateContextWrapperProps<T> {
+	stateContext: Context<T>;
+	getState: () => T;
+}
+
 export const withHooks = withComponentHooks as <T extends typeof React.Component>(
 	component: T
 ) => T;
 
-export function createStore<T extends Record<string, any>>(initialValue: T): Context<T> {
-	const ReactContext = React.createContext<Provider<T>>({} as Provider<T>);
+export function createStore<T extends Record<string | number | symbol, any>>(
+	initialValue: T
+): Store<T> {
+	const StoreContext = React.createContext<Provider<T>>({
+		subscribe(subscribe) {
+			// TODO: throw error
+		},
+	} as Provider<T>);
+	const StateContext = React.createContext<T>({} as T);
+
+	class StateContextWrapper extends React.Component<StateContextWrapperProps<T>> {
+		render() {
+			const { children, stateContext, getState } = this.props;
+			return <stateContext.Provider value={getState()}>{children}</stateContext.Provider>;
+		}
+	}
 
 	const Provider = class extends React.Component<{}, T> {
 		protected _listeners: Subscriber<T>[] = [];
+
+		stateContextRef = React.createRef<StateContextWrapper>();
 
 		getSubscribeCount() {
 			return this._listeners.length;
@@ -53,11 +76,20 @@ export function createStore<T extends Record<string, any>>(initialValue: T): Con
 		) {
 			const prevState = this.state;
 			super.setState(state, () => {
+				this.stateContextRef.current?.setState({});
 				this._listeners.forEach(listener => {
 					listener(prevState, this.state);
 				});
 				callback && callback();
 			});
+		}
+
+		// no re-render, although current StoreContext.Provider already does not re-render,
+		shouldComponentUpdate(nextProps: {}) {
+			if (this.props === nextProps) {
+				return false;
+			}
+			return true;
 		}
 
 		subscribe(subscriber: Subscriber<T>): () => void {
@@ -70,28 +102,28 @@ export function createStore<T extends Record<string, any>>(initialValue: T): Con
 			};
 		}
 
-		// no re-render, although current ReactContext.Provider already does not re-render,
-		shouldComponentUpdate(nextProps: {}) {
-			if (this.props === nextProps) {
-				return false;
-			}
-			return true;
-		}
-
 		componentWillUnmount() {
 			this._listeners.length = 0;
 		}
 
 		render() {
 			return (
-				<ReactContext.Provider value={this}>{this.props.children}</ReactContext.Provider>
+				<StateContextWrapper
+					ref={this.stateContextRef}
+					stateContext={StateContext}
+					getState={() => this.state}
+				>
+					<StoreContext.Provider value={this}>
+						{this.props.children}
+					</StoreContext.Provider>
+				</StateContextWrapper>
 			);
 		}
 	};
 
 	const Consumer: Consumer<T> = function(props) {
 		const [state, setState] = React.useState(initialValue);
-		const provider = React.useContext(ReactContext);
+		const provider = React.useContext(StoreContext);
 
 		React.useEffect(() => {
 			return provider.subscribe((_, nextState) => {
@@ -103,12 +135,12 @@ export function createStore<T extends Record<string, any>>(initialValue: T): Con
 	};
 
 	const useProvider: UseProvider<T> = function() {
-		return React.useContext(ReactContext);
+		return React.useContext(StoreContext);
 	};
 
 	const useState: UseState<T> = function() {
 		const [state, setState] = React.useState(initialValue);
-		const provider = React.useContext(ReactContext);
+		const provider = React.useContext(StoreContext);
 
 		React.useEffect(() => {
 			return provider.subscribe((_, nextState) => {
@@ -121,7 +153,7 @@ export function createStore<T extends Record<string, any>>(initialValue: T): Con
 
 	const useSelector: UseSelector<T> = function useSelector(selector) {
 		const [state, setState] = React.useState(selector(initialValue));
-		const provider = React.useContext(ReactContext);
+		const provider = React.useContext(StoreContext);
 
 		React.useEffect(() => {
 			return provider.subscribe((_, nextState) => {
@@ -136,14 +168,20 @@ export function createStore<T extends Record<string, any>>(initialValue: T): Con
 	};
 
 	const useUpdate: UseUpdate<T> = function() {
-		const provider = React.useContext(ReactContext);
+		const provider = React.useContext(StoreContext);
 
 		return state => {
 			provider.setState(state);
 		};
 	};
 
+	StateContext.Provider = function(props) {
+		//TODO: throw error
+		return props.children;
+	} as typeof StateContext.Provider;
+
 	return {
+		Context: StateContext,
 		Provider,
 		Consumer,
 		useProvider,
