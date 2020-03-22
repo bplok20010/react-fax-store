@@ -2,16 +2,11 @@ import React from "react";
 import withComponentHooks from "with-component-hooks";
 import shallowEqual from "./shallowEqual";
 
-type Update<T> = (state: Partial<T>) => void;
-type SelectorReturn<T> = any;
-type Selector<T> = (state: T) => SelectorReturn<T>;
-type useStateReturn<T> = [T, Update<T>];
-type useSelectorReturn<T> = [SelectorReturn<T>, Update<T>];
-type Subscriber<T> = (prevState: T, nextState: T) => void;
-
-type UseSelector<T, TResult extends (state: T) => any> = (
-	selector: Selector<T>
-) => [ReturnType<TResult>, Update<T>];
+type Update<T> = (state: Pick<T, keyof T> | T | null) => void;
+type Subscriber<T> = (prevState: Readonly<T>, nextState: Readonly<T>) => void;
+type UseSelector<T> = <S extends (state: T) => any>(selector: S) => ReturnType<S>;
+type Consumer<T> = (props: ConsumerProps<T>) => React.ReactNode;
+type UseUpdate<T> = () => Update<T>;
 
 interface ConsumerProps<T> {
 	children: (state: T) => React.ReactNode;
@@ -24,12 +19,10 @@ interface Provider<T> extends React.Component<{}, T> {
 interface Context<T> {
 	Provider: new (props: {}) => Provider<T>;
 	Consumer: Consumer<T>;
-	useState: () => useStateReturn<T>;
-	useSelector: UseSelector<T, (state: T) => any>;
-	useUpdate: Update<T>;
+	useState: () => T;
+	useSelector: UseSelector<T>;
+	useUpdate: UseUpdate<T>;
 }
-
-type Consumer<T> = (props: ConsumerProps<T>) => React.ReactNode;
 
 export const withHooks = withComponentHooks as <T extends React.Component>(component: T) => T;
 
@@ -39,13 +32,18 @@ export function createContext<T extends Record<string, any>>(initialValue: T): C
 	const Provider = class extends React.Component<{}, T> {
 		protected _listeners: Subscriber<T>[] = [];
 
-		state: T = initialValue;
+		state: Readonly<T> = initialValue;
 
-		setState(state: T, callback?: () => void) {
-			const oldState = this.state;
+		setState<K extends keyof T>(
+			state:
+				| ((prevState: Readonly<T>, props: Readonly<{}>) => Pick<T, K> | T | null)
+				| (Pick<T, K> | T | null),
+			callback?: () => void
+		) {
+			const prevState = this.state;
 			super.setState(state, () => {
 				this._listeners.forEach(listener => {
-					listener(oldState, state);
+					listener(prevState, this.state);
 				});
 				callback && callback();
 			});
@@ -93,12 +91,9 @@ export function createContext<T extends Record<string, any>>(initialValue: T): C
 		return props.children(state);
 	};
 
-	const useState = function(): useStateReturn<T> {
+	const useState = function(): T {
 		const [state, setState] = React.useState(initialValue);
 		const provider = React.useContext(ReactContext);
-		const update: Update<T> = (state: T) => {
-			provider.setState(state);
-		};
 
 		React.useEffect(() => {
 			return provider.subscribe((_, nextState) => {
@@ -106,15 +101,12 @@ export function createContext<T extends Record<string, any>>(initialValue: T): C
 			});
 		});
 
-		return [state, update];
+		return state;
 	};
 
-	const useSelector: UseSelector<T, (state: T) => any> = function(selector) {
+	const useSelector: UseSelector<T> = function useSelector(selector) {
 		const [state, setState] = React.useState(selector(initialValue));
 		const provider = React.useContext(ReactContext);
-		const update: Update<T> = (state: T) => {
-			provider.setState(state);
-		};
 
 		React.useEffect(() => {
 			return provider.subscribe((_, nextState) => {
@@ -125,16 +117,15 @@ export function createContext<T extends Record<string, any>>(initialValue: T): C
 			});
 		});
 
-		return [state, update];
+		return state;
 	};
 
-	const useUpdate = function() {
+	const useUpdate: UseUpdate<T> = function() {
 		const provider = React.useContext(ReactContext);
-		const update: Update<T> = (state: T) => {
+
+		return state => {
 			provider.setState(state);
 		};
-
-		return update;
 	};
 
 	return {
