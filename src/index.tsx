@@ -2,35 +2,46 @@ import React from "react";
 import withComponentHooks from "with-component-hooks";
 import shallowEqual from "./shallowEqual";
 
-type Update<T> = (state: Pick<T, keyof T> | T | null) => void;
-type Subscriber<T> = (prevState: Readonly<T>, nextState: Readonly<T>) => void;
-type UseSelector<T> = <S extends (state: T) => any>(selector: S) => ReturnType<S>;
-type Consumer<T> = (props: ConsumerProps<T>) => React.ReactNode;
-type UseUpdate<T> = () => Update<T>;
+export type Update<T = {}> = <K extends keyof T>(state: Pick<T, K> | T | null) => void;
+export type Subscriber<T = {}> = (prevState: Readonly<T>, nextState: Readonly<T>) => void;
+export type UseSelector<T = {}> = <S extends (state: T) => any>(selector: S) => ReturnType<S>;
+export type UseUpdate<T = {}> = () => Update<T>;
+export type UseState<T = {}> = () => T;
+export type UseProvider<T> = () => Provider<T>;
 
-interface ConsumerProps<T> {
-	children: (state: T) => React.ReactNode;
+export interface ConsumerProps<T = {}> {
+	children: (state: T) => React.ReactElement | null;
 }
 
-interface Provider<T> extends React.Component<{}, T> {
+export type Consumer<T = {}> = React.FC<ConsumerProps<T>>;
+
+export interface Provider<T = {}> extends React.Component<{}, T> {
+	getSubscribeCount(): number;
 	subscribe(subscriber: Subscriber<T>): () => void;
 }
 
-interface Context<T> {
+export interface Context<T = {}> {
 	Provider: new (props: {}) => Provider<T>;
 	Consumer: Consumer<T>;
+	useProvider: UseProvider<T>;
 	useState: () => T;
 	useSelector: UseSelector<T>;
 	useUpdate: UseUpdate<T>;
 }
 
-export const withHooks = withComponentHooks as <T extends React.Component>(component: T) => T;
+export const withHooks = withComponentHooks as <T extends typeof React.Component>(
+	component: T
+) => T;
 
-export function createContext<T extends Record<string, any>>(initialValue: T): Context<T> {
+export function createStore<T extends Record<string, any>>(initialValue: T): Context<T> {
 	const ReactContext = React.createContext<Provider<T>>({} as Provider<T>);
 
 	const Provider = class extends React.Component<{}, T> {
 		protected _listeners: Subscriber<T>[] = [];
+
+		getSubscribeCount() {
+			return this._listeners.length;
+		}
 
 		state: Readonly<T> = initialValue;
 
@@ -78,7 +89,7 @@ export function createContext<T extends Record<string, any>>(initialValue: T): C
 		}
 	};
 
-	const Consumer: Consumer<T> = function(props: ConsumerProps<T>) {
+	const Consumer: Consumer<T> = function(props) {
 		const [state, setState] = React.useState(initialValue);
 		const provider = React.useContext(ReactContext);
 
@@ -91,7 +102,11 @@ export function createContext<T extends Record<string, any>>(initialValue: T): C
 		return props.children(state);
 	};
 
-	const useState = function(): T {
+	const useProvider: UseProvider<T> = function() {
+		return React.useContext(ReactContext);
+	};
+
+	const useState: UseState<T> = function() {
 		const [state, setState] = React.useState(initialValue);
 		const provider = React.useContext(ReactContext);
 
@@ -131,6 +146,7 @@ export function createContext<T extends Record<string, any>>(initialValue: T): C
 	return {
 		Provider,
 		Consumer,
+		useProvider,
 		useState,
 		useSelector,
 		useUpdate,
