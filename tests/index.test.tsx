@@ -8,9 +8,10 @@ configure({ adapter: new Adapter() });
 test("createStore", () => {
 	const context = createStore({});
 
-	expect(Object.keys(context)).toHaveLength(6);
+	expect(Object.keys(context)).toHaveLength(7);
 
 	expect(Object.keys(context)).toEqual([
+		"Context",
 		"Provider",
 		"Consumer",
 		"useProvider",

@@ -20,14 +20,15 @@ test("useSelector basic", () => {
 	let Consumer1CallCounter = 0;
 	let Consumer2CallCounter = 0;
 	let Consumer3CallCounter = 0;
+	let UseReactContextCallCounter = 0;
 
 	let idx = 0;
 
-	const Context = createStore(data);
+	const Store = createStore(data);
 
 	function Button() {
 		ButtonCallCounter++;
-		const update = Context.useUpdate();
+		const update = Store.useUpdate();
 		return (
 			<button
 				onClick={() => {
@@ -46,7 +47,7 @@ test("useSelector basic", () => {
 	function Consumer() {
 		ConsumerCallCounter++;
 
-		const state = Context.useState();
+		const state = Store.useState();
 		return (
 			<div className="consumer">
 				{state.value}-{state.name}-{state.address}
@@ -56,19 +57,29 @@ test("useSelector basic", () => {
 	function Consumer1() {
 		Consumer1CallCounter++;
 
-		const value = Context.useSelector(state => state.value);
+		const value = Store.useSelector(state => state.value);
 		return <div className="consumer1">{value}</div>;
 	}
 	function Consumer2() {
 		Consumer2CallCounter++;
 
-		const name = Context.useSelector(state => state.name);
+		const name = Store.useSelector(state => state.name);
 		return <div className="consumer2">{name}</div>;
 	}
 	function Consumer3() {
 		Consumer3CallCounter++;
-		const address = Context.useSelector(state => state.address);
+		const address = Store.useSelector(state => state.address);
 		return <div className="consumer3">{address}</div>;
+	}
+
+	function UseReactContext() {
+		UseReactContextCallCounter++;
+		const state = React.useContext(Store.Context);
+		return (
+			<div className="use-react-context">
+				{state.value}-{state.name}-{state.address}
+			</div>
+		);
 	}
 
 	class MyComponent extends React.Component {
@@ -85,6 +96,7 @@ test("useSelector basic", () => {
 					<Consumer1 />
 					<Consumer2 />
 					<Consumer3 />
+					<UseReactContext />
 				</>
 			);
 		}
@@ -103,21 +115,21 @@ test("useSelector basic", () => {
 	let ReRenderCallCounter = 0;
 	function Test1() {
 		ReRenderCallCounter++;
-		Context.useState();
+		Store.useState();
 		return null;
 	}
 	function Test() {
-		Context.useState();
+		Store.useState();
 		return <Test1 />;
 	}
 
 	class RootComponent extends React.Component {
 		render() {
 			return (
-				<Context.Provider ref={ref}>
+				<Store.Provider ref={ref}>
 					<Action />
 					<MyComponent />
-					<Context.Consumer>
+					<Store.Consumer>
 						{state => {
 							return (
 								<>
@@ -128,14 +140,15 @@ test("useSelector basic", () => {
 								</>
 							);
 						}}
-					</Context.Consumer>
-				</Context.Provider>
+					</Store.Consumer>
+				</Store.Provider>
 			);
 		}
 	}
 
 	const wrapper = mount(<RootComponent />);
 
+	expect(wrapper.find(".use-react-context").text()).toEqual("react-pure-context");
 	expect(wrapper.find(".consumer").text()).toEqual("react-pure-context");
 	expect(wrapper.find(".consumer-fc").text()).toEqual("react-pure-context");
 	expect(wrapper.find(".consumer1").text()).toEqual("react");
@@ -146,11 +159,13 @@ test("useSelector basic", () => {
 
 	expect(ButtonCallCounter).toEqual(1);
 	expect(MyComponentCallCounter).toEqual(1);
+	expect(UseReactContextCallCounter).toEqual(2);
 	expect(ConsumerCallCounter).toEqual(2);
 	expect(Consumer1CallCounter).toEqual(2);
 	expect(Consumer2CallCounter).toEqual(2);
 	expect(Consumer3CallCounter).toEqual(1);
 
+	expect(wrapper.find(".use-react-context").text()).toEqual("react1-pure1-context");
 	expect(wrapper.find(".consumer").text()).toEqual("react1-pure1-context");
 	expect(wrapper.find(".consumer-fc").text()).toEqual("react1-pure1-context");
 	expect(wrapper.find(".consumer1").text()).toEqual("react1");
@@ -161,11 +176,13 @@ test("useSelector basic", () => {
 
 	expect(ButtonCallCounter).toEqual(1);
 	expect(MyComponentCallCounter).toEqual(1);
+	expect(UseReactContextCallCounter).toEqual(3);
 	expect(ConsumerCallCounter).toEqual(3);
 	expect(Consumer1CallCounter).toEqual(3);
 	expect(Consumer2CallCounter).toEqual(3);
 	expect(Consumer3CallCounter).toEqual(1);
 
+	expect(wrapper.find(".use-react-context").text()).toEqual("react2-pure2-context");
 	expect(wrapper.find(".consumer").text()).toEqual("react2-pure2-context");
 	expect(wrapper.find(".consumer-fc").text()).toEqual("react2-pure2-context");
 	expect(wrapper.find(".consumer1").text()).toEqual("react2");

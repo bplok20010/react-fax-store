@@ -45,7 +45,7 @@ function AddBtn(props) {
 function Total() {
 	const state = TodoStore.useState();
 
-	return <div className="total">totals: {state.items.length}</div>;
+	return <div className="total">{state.items.length} total</div>;
 }
 
 class TodoList extends React.Component {
