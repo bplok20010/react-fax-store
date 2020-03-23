@@ -76,21 +76,23 @@ export function createStore<T extends Record<string | number | symbol, any>>(
 		) {
 			const prevState = this.state;
 			super.setState(state, () => {
-				this.stateContextRef.current?.setState({});
+				// this.stateContextRef.current?.setState({});
+
 				this._listeners.forEach(listener => {
 					listener(prevState, this.state);
 				});
+
 				callback && callback();
 			});
 		}
 
 		// no re-render, although current StoreContext.Provider already does not re-render,
-		shouldComponentUpdate(nextProps: {}) {
-			if (this.props === nextProps) {
-				return false;
-			}
-			return true;
-		}
+		// shouldComponentUpdate(nextProps: {}) {
+		// 	if (this.props === nextProps) {
+		// 		return false;
+		// 	}
+		// 	return true;
+		// }
 
 		subscribe(subscriber: Subscriber<T>): () => void {
 			this._listeners.push(subscriber);
@@ -108,15 +110,17 @@ export function createStore<T extends Record<string | number | symbol, any>>(
 
 		render() {
 			return (
-				<StateContextWrapper
-					ref={this.stateContextRef}
-					stateContext={StateContext}
-					getState={() => this.state}
-				>
+				// <StateContextWrapper
+				// 	ref={this.stateContextRef}
+				// 	stateContext={StateContext}
+				// 	getState={() => this.state}
+				// >
+				<StateContext.Provider value={this.state}>
 					<StoreContext.Provider value={this}>
 						{this.props.children}
 					</StoreContext.Provider>
-				</StateContextWrapper>
+				</StateContext.Provider>
+				// </StateContextWrapper>
 			);
 		}
 	};
@@ -175,10 +179,10 @@ export function createStore<T extends Record<string | number | symbol, any>>(
 		};
 	};
 
-	StateContext.Provider = function(props) {
-		//TODO: throw error
-		return props.children;
-	} as typeof StateContext.Provider;
+	// StateContext.Provider = function(props) {
+	// 	//TODO: throw error
+	// 	return props.children;
+	// } as typeof StateContext.Provider;
 
 	return {
 		Context: StateContext,
