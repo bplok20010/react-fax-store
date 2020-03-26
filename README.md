@@ -1,6 +1,10 @@
 # react-fax-store
 react-fax-store
 
+## Install
+
+`npm install --save react-fax-store`
+
 ## Useage
 
 ```js
@@ -53,7 +57,6 @@ export type createStore = <T extends Record<string | number | symbol, any>>(
 }
 
  interface Provider<T = {}> extends React.Component<{}, T> {
-	__$isProvider: boolean;
 	getSubscribeCount(): number;
 	subscribe(subscriber: Subscriber<T>): () => void;
 }
