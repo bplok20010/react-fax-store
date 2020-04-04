@@ -24,7 +24,9 @@ test("useSelector basic", () => {
 
 	let idx = 0;
 
-	const Store = createStore(data);
+	const Store = createStore(() => ({
+		...data,
+	}));
 
 	function Button() {
 		ButtonCallCounter++;

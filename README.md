@@ -10,14 +10,18 @@ react-fax-store
 ```js
 import {createStore} from 'react-fax-store';
 
-const Store = createStore({text: 'fax-store'});
+const Store = createStore(() => ({text: 'fax-store'}));
 
 function App(){
     const data = React.useContext(Store.Context); // {text: 'fax-store'} subscribe state
     const state = store.useState(); // {text: 'fax-store'} subscribe state
     const text = store.useSelector( state => state.text ); // fax-store subscribe only state.text change
-    const provider = store.useProvider();
-    provider.state; // {text: 'fax-store'}
+    const store = store.useStore();
+    store.getState(); // {text: 'fax-store'}
+    store.setState({
+        text : 'react-fax-store'
+    });
+    // or 
     const update = store.useUpdate();
     update({
         text : 'react-fax-store'
@@ -40,7 +44,7 @@ function App(){
 export type withHooks = <T>(c:T) => T;
 
 export type createStore = <T extends Record<string | number | symbol, any>>(
-	initialValue: T
+	initialValue: () => T
 ): Store<T>
 
  type Update<T = {}> = <K extends keyof T>(state: Pick<T, K> | T | null) => void;
@@ -58,7 +62,8 @@ export type createStore = <T extends Record<string | number | symbol, any>>(
 
  interface Provider<T = {}> extends React.Component<{}, T> {
 	getSubscribeCount(): number;
-	subscribe(subscriber: Subscriber<T>): () => void;
+    subscribe(subscriber: Subscriber<T>): () => void;
+    getState(): T;
 }
 
  interface Store<T = {}> {
@@ -66,6 +71,7 @@ export type createStore = <T extends Record<string | number | symbol, any>>(
 	Provider: new (props: {}) => Provider<T>;
 	Consumer: Consumer<T>;
 	useProvider: UseProvider<T>;
+	useStore: UseProvider<T>;
 	useState: () => T;
 	useSelector: UseSelector<T>;
 	useUpdate: UseUpdate<T>;

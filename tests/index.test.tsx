@@ -6,15 +6,16 @@ import React from "react";
 configure({ adapter: new Adapter() });
 
 test("createStore", () => {
-	const context = createStore({});
+	const context = createStore(() => ({}));
 
-	expect(Object.keys(context)).toHaveLength(7);
+	expect(Object.keys(context)).toHaveLength(8);
 
 	expect(Object.keys(context)).toEqual([
 		"Context",
 		"Provider",
 		"Consumer",
 		"useProvider",
+		"useStore",
 		"useState",
 		"useSelector",
 		"useUpdate",
@@ -25,7 +26,7 @@ test("render Provider -1", () => {
 	const data = {
 		name: "provider",
 	};
-	const Context = createStore(data);
+	const Context = createStore(() => data);
 
 	const ref = React.createRef<Provider<typeof data>>();
 
@@ -38,7 +39,7 @@ test("render Provider with child update", () => {
 	const data = {
 		name: "provider",
 	};
-	const Context = createStore(data);
+	const Context = createStore(() => data);
 
 	const ref = React.createRef<RootComponent>();
 
@@ -80,7 +81,7 @@ test("render Provider without child update", () => {
 
 	const ref = React.createRef<Provider<typeof data>>();
 
-	const Context = createStore(data);
+	const Context = createStore(() => data);
 
 	let counter = 0;
 
@@ -118,12 +119,13 @@ test("render Provider without child update", () => {
 
 test("useState&useUpdate", () => {
 	const data = {
+		v: 1,
 		value: "a",
 	};
 
 	let counter = 0;
 
-	const Context = createStore(data);
+	const Context = createStore(() => data);
 
 	function Button() {
 		counter++;
