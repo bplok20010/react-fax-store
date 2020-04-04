@@ -5,7 +5,7 @@ react-fax-store
 
 `npm install --save react-fax-store`
 
-## Useage
+## Usage
 
 ```js
 import {createStore} from 'react-fax-store';
