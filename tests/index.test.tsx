@@ -120,6 +120,7 @@ test("render Provider without child update", () => {
 test("useState&useUpdate", () => {
 	const data = {
 		v: 1,
+		counter: 10,
 		value: "a",
 	};
 
@@ -131,21 +132,41 @@ test("useState&useUpdate", () => {
 		counter++;
 		const update = Context.useUpdate();
 		return (
-			<button
-				onClick={() => {
-					update({
-						value: "b",
-					});
-				}}
-			>
-				Count
-			</button>
+			<>
+				<button
+					className="value-btn"
+					onClick={() => {
+						update({
+							value: "b",
+						});
+					}}
+				>
+					Count
+				</button>
+				<button
+					className="counter-btn"
+					onClick={() => {
+						update(prevState => {
+							return {
+								counter: prevState.counter + 10,
+							};
+						});
+					}}
+				>
+					Count
+				</button>
+			</>
 		);
 	}
 
 	function Consumer() {
 		const state = Context.useState();
-		return <div className="consumer">{state.value}</div>;
+		return (
+			<>
+				<div className="consumer">{state.value}</div>
+				<div className="consumer2">{state.counter}</div>
+			</>
+		);
 	}
 
 	class MyComponent extends React.Component {
@@ -186,8 +207,13 @@ test("useState&useUpdate", () => {
 	expect(counter).toEqual(2);
 	expect(wrapper.find(".consumer").text()).toEqual("a");
 
-	wrapper.find("button").simulate("click");
+	wrapper.find(".value-btn").simulate("click");
 
 	expect(counter).toEqual(2);
+	expect(wrapper.find(".consumer2").text()).toEqual("10");
+	expect(wrapper.find(".consumer").text()).toEqual("b");
+
+	wrapper.find(".counter-btn").simulate("click");
+	expect(wrapper.find(".consumer2").text()).toEqual("20");
 	expect(wrapper.find(".consumer").text()).toEqual("b");
 });
