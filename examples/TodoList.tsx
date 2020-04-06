@@ -1,5 +1,4 @@
 import React from "react";
-import { withHooks } from "../src";
 
 import TodoStore from "./TodoStore";
 
@@ -33,12 +32,28 @@ function List() {
 	);
 }
 
-function AddBtn(props) {
-	const store = TodoStore.useProvider();
+function AddBtn() {
+	const update = TodoStore.useUpdate();
 	return (
-		<div>
-			<button onClick={() => props.handleAdd(store)}>Add</button>
-		</div>
+		<>
+			<button
+				onClick={() =>
+					update(prevState => {
+						return {
+							items: [
+								...prevState.items,
+								{
+									title: "demo_" + Date.now(),
+									desc: "test",
+								},
+							],
+						};
+					})
+				}
+			>
+				Add
+			</button>
+		</>
 	);
 }
 
@@ -48,24 +63,23 @@ function Total() {
 	return <div className="total">{state.items.length} total</div>;
 }
 
-class TodoList extends React.Component {
-	handleAdd(store: ReturnType<typeof TodoStore.useProvider>) {
-		store.setState({
-			items: [
-				...store.state.items,
-				{
-					title: "demo_" + Date.now(),
-					desc: "test",
-				},
-			],
-		});
-	}
+function RenderCounter(props) {
+	let [counter, update] = React.useState(0);
 
+	React.useEffect(() => {
+		update(counter + 1);
+	}, [props]);
+
+	return <>{counter}</>;
+}
+
+class TodoList extends React.Component {
 	render() {
 		return (
 			<div className="todo-list">
 				<TodoStore.Provider>
-					<AddBtn handleAdd={this.handleAdd.bind(this)}></AddBtn>
+					<AddBtn></AddBtn>
+					<button onClick={() => this.forceUpdate()}>Refresh</button> <RenderCounter />
 					<Total />
 					<List />
 				</TodoStore.Provider>
