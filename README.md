@@ -112,6 +112,8 @@ function Info(){
 
 ### useUpdate
 
+更新数据
+
 ```
 function Action(){
     const update = Store.useUpdate(prevState => {
