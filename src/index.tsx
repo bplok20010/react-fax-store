@@ -3,7 +3,11 @@ import invariant from "invariant";
 import withComponentHooks from "with-component-hooks";
 import shallowEqual from "./shallowEqual";
 
-export type Update<T = {}> = <K extends keyof T>(state: Pick<T, K> | T | null) => void;
+"%VERSION%";
+
+export type Update<T = {}> = <K extends keyof T>(
+	state: ((prevState: Readonly<T>) => Pick<T, K> | T | null) | Pick<T, K> | T | null
+) => void;
 export type Subscriber<T = {}> = (prevState: Readonly<T>, nextState: Readonly<T>) => void;
 export type UseSelector<T = {}> = <S extends (state: T) => any>(selector: S) => ReturnType<S>;
 export type UseUpdate<T = {}> = () => Update<T>;
