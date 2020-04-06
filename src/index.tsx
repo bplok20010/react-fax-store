@@ -3,7 +3,7 @@ import invariant from "invariant";
 import withComponentHooks from "with-component-hooks";
 import shallowEqual from "./shallowEqual";
 
-"%VERSION%";
+export const version = "%VERSION%";
 
 export type Update<T = {}> = <K extends keyof T>(
 	state: ((prevState: Readonly<T>) => Pick<T, K> | T | null) | Pick<T, K> | T | null
