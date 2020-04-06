@@ -1,11 +1,11 @@
 # react-fax-store
 react-fax-store
 
-## Install
+## 安装
 
 `npm install --save react-fax-store`
 
-## Usage
+## 使用
 
 ```js
 import {createStore} from 'react-fax-store';
@@ -36,6 +36,118 @@ function App(){
 
 
 ```
+---
+
+## `createStore(initialValue: () => {}): Store;`
+
+创建Store对象
+
+```js
+import {createStore} from 'react-fax-store';
+
+createStore(() => {
+    return {
+        ...
+    }
+})
+
+
+```
+
+## Store
+
+### `Provider`
+
+```jsx
+<Store.Provider>
+    ...
+</Store.Provider>
+
+```
+
+### Consumer
+
+```jsx
+<Store.Provider>
+    ...
+    <Store.Consumer>
+        {state => {
+            return <div>{state}</div>
+        }}
+    </Store.Consumer>
+    ...
+</Store.Provider>
+
+```
+
+### useState
+
+订阅整个数据
+
+```jsx
+
+function Info(){
+    const state = Store.useState();
+    return <div>{state}</div>
+}
+
+```
+
+### useSelector
+
+订阅指定数据
+
+```jsx
+
+function Info(){
+    const state = Store.useSelector(state => {
+        return {
+            username: state.username
+        }
+    });
+    return <div>{state.username}</div>
+}
+
+```
+
+### useUpdate
+
+```
+function Action(){
+    const update = Store.useUpdate(prevState => {
+        return {
+            username: prevState.username + '_xc'
+        }
+    });
+    return <button onClick={update}>Add</button>
+}
+
+```
+
+### useProvider
+
+别名：`useStore`
+
+
+获取由Provider提供的store数据对象
+
+```
+const store = Store.useStore();
+store.getState();
+// or
+store.setState(...)
+```
+
+### Context
+
+可直接通过React.useContext获取数据
+
+```
+const state = React.useContext(Store.Context);
+
+```
+
+
 
 ## interface
 
@@ -47,7 +159,9 @@ export type createStore = <T extends Record<string | number | symbol, any>>(
 	initialValue: () => T
 ): Store<T>
 
- type Update<T = {}> = <K extends keyof T>(state: Pick<T, K> | T | null) => void;
+export type Update<T = {}> = <K extends keyof T>(
+	state: ((prevState: Readonly<T>) => Pick<T, K> | T | null) | Pick<T, K> | T | null
+) => void;
  type Subscriber<T = {}> = (prevState: Readonly<T>, nextState: Readonly<T>) => void;
  type UseSelector<T = {}> = <S extends (state: T) => any>(selector: S) => ReturnType<S>;
  type UseUpdate<T = {}> = () => Update<T>;
@@ -78,3 +192,40 @@ export type createStore = <T extends Record<string | number | symbol, any>>(
 }
 
 ```
+
+## Example
+
+`store.js`
+```js
+import {createStore} from 'react-fax-store';
+
+export default createStore(() => {
+    return {
+        name: 'react-fax-store';
+    }
+});
+```
+
+`index.js`
+
+```jsx
+import React from 'react'
+import Store from './store';
+
+function Info(){
+    const state = Store.useState();
+    return <div>{state.name}</div>
+}
+
+function App(){
+    return (
+        <Store.Provider>
+            <Info />
+        </Store.Provider>
+    );
+}
+
+export default App;
+
+```
+
