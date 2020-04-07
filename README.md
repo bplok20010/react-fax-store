@@ -1,5 +1,6 @@
 # react-fax-store
-react-fax-store
+
+基于React16的Context简单封装的状态管理库 
 
 ## 安装
 
@@ -51,6 +52,20 @@ createStore(() => {
     }
 })
 
+```
+
+## `createReducer((prevState: {}, action: {type:string, [x:string]: any}),initialValue: () => {}): ReducerStore`
+
+创建Store对象
+
+```js
+import {createStore} from 'react-fax-store';
+
+createStore(() => {
+    return {
+        ...
+    }
+})
 
 ```
 
@@ -149,49 +164,68 @@ const state = React.useContext(Store.Context);
 
 ```
 
+## ReducerStore
+
+继承Store
+
+### useDispatch
+
+```
+const dispatch = React.useDispatch();
+
+dispatch({
+    type: 'ADD',
+    data: 1,
+})
+
+```
 
 
 ## interface
 
 ```ts
 
-export type withHooks = <T>(c:T) => T;
-
-export type createStore = <T extends Record<string | number | symbol, any>>(
-	initialValue: () => T
-): Store<T>
-
-export type Update<T = {}> = <K extends keyof T>(
-	state: ((prevState: Readonly<T>) => Pick<T, K> | T | null) | Pick<T, K> | T | null
-) => void;
- type Subscriber<T = {}> = (prevState: Readonly<T>, nextState: Readonly<T>) => void;
- type UseSelector<T = {}> = <S extends (state: T) => any>(selector: S) => ReturnType<S>;
- type UseUpdate<T = {}> = () => Update<T>;
- type UseState<T = {}> = () => T;
- type UseProvider<T> = () => Provider<T>;
- type Consumer<T = {}> = React.FC<ConsumerProps<T>>;
- type Context<T> = React.Context<T>;
-
- interface ConsumerProps<T = {}> {
-	children: (state: T) => React.ReactElement | null;
+export declare type Update<T = {}> = <K extends keyof T>(state: ((prevState: Readonly<T>) => Pick<T, K> | T | null) | Pick<T, K> | T | null) => void;
+export declare type Subscriber<T = {}> = (prevState: Readonly<T>, nextState: Readonly<T>) => void;
+export declare type UseSelector<T = {}> = <S extends (state: T) => any>(selector: S) => ReturnType<S>;
+export declare type UseUpdate<T = {}> = () => Update<T>;
+export declare type UseState<T = {}> = () => T;
+export declare type UseProvider<T> = () => Provider<T>;
+export declare type Consumer<T = {}> = React.FC<ConsumerProps<T>>;
+export declare type Context<T> = React.Context<T>;
+export declare type ReducerAction = {
+    type: string;
+    [x: string]: any;
+};
+export declare type Reducer<T> = (state: T, action: ReducerAction) => T;
+export declare type Dispatch = (action: ReducerAction) => void;
+export declare type UseDispatch = () => Dispatch;
+export interface ConsumerProps<T = {}> {
+    children: (state: T) => React.ReactElement | null;
 }
-
- interface Provider<T = {}> extends React.Component<{}, T> {
-	getSubscribeCount(): number;
+export interface Provider<T = {}> extends React.Component<{}, T> {
+    __$isProvider: boolean;
+    getSubscribeCount(): number;
     subscribe(subscriber: Subscriber<T>): () => void;
     getState(): T;
 }
-
- interface Store<T = {}> {
-	Context: Context<T>;
-	Provider: new (props: {}) => Provider<T>;
-	Consumer: Consumer<T>;
-	useProvider: UseProvider<T>;
-	useStore: UseProvider<T>;
-	useState: () => T;
-	useSelector: UseSelector<T>;
-	useUpdate: UseUpdate<T>;
+export interface Store<T = {}> {
+    Context: Context<T>;
+    Provider: new (props: {}) => Provider<T>;
+    Consumer: Consumer<T>;
+    useProvider: UseProvider<T>;
+    useStore: UseProvider<T>;
+    useState: () => T;
+    useSelector: UseSelector<T>;
+    useUpdate: UseUpdate<T>;
 }
+export interface ReducerStore<T = {}> extends Store<T> {
+    useDispatch: UseDispatch;
+}
+export declare const withHooks: <T extends typeof React.Component>(component: T) => T;
+export declare function createStore<T extends Record<string | number | symbol, any>>(initialValue: () => T): Store<T>;
+export declare function createReducer<T>(reducer: Reducer<T>, initialValue: () => T): ReducerStore<T>;
+
 
 ```
 
