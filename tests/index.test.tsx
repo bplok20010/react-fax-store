@@ -1,6 +1,6 @@
 import { mount, configure } from "enzyme";
 import Adapter from "enzyme-adapter-react-16";
-import { createStore, Provider } from "../src";
+import { createStore, createReducer, Provider } from "../src";
 import React from "react";
 
 configure({ adapter: new Adapter() });
@@ -216,4 +216,106 @@ test("useState&useUpdate", () => {
 	wrapper.find(".counter-btn").simulate("click");
 	expect(wrapper.find(".consumer2").text()).toEqual("20");
 	expect(wrapper.find(".consumer").text()).toEqual("b");
+});
+
+test("createReducer", () => {
+	const ReducerStore = createReducer(
+		(prevState, action) => {
+			switch (action.type) {
+				case "increment":
+					return {
+						counter: prevState.counter + action.data,
+					};
+				case "decrement":
+					return {
+						counter: prevState.counter - action.data,
+					};
+				default:
+					// throw new Error("unknown type");
+					return prevState;
+			}
+		},
+		() => ({
+			counter: 100,
+		})
+	);
+
+	function Display() {
+		const state = ReducerStore.useState();
+		return <div className="counter">{state.counter}</div>;
+	}
+
+	function Increment() {
+		const dispatch = ReducerStore.useDispatch();
+		return (
+			<button
+				className="increment"
+				onClick={() =>
+					dispatch({
+						type: "increment",
+						data: 1,
+					})
+				}
+			>
+				increment
+			</button>
+		);
+	}
+
+	function Decrement() {
+		const dispatch = ReducerStore.useDispatch();
+		return (
+			<button
+				className="decrement"
+				onClick={() =>
+					dispatch({
+						type: "decrement",
+						data: 1,
+					})
+				}
+			>
+				decrement
+			</button>
+		);
+	}
+
+	function ErrorAction() {
+		const dispatch = ReducerStore.useDispatch();
+		return (
+			<button
+				className="error"
+				onClick={() =>
+					dispatch({
+						type: "error",
+						data: 1,
+					})
+				}
+			>
+				error
+			</button>
+		);
+	}
+
+	const wrapper = mount(
+		<ReducerStore.Provider>
+			<div>
+				<Increment />
+				<Decrement />
+				<ErrorAction />
+				<Display />
+			</div>
+		</ReducerStore.Provider>
+	);
+
+	expect(wrapper.find(".counter").text()).toEqual("100");
+
+	wrapper.find(".increment").simulate("click");
+	expect(wrapper.find(".counter").text()).toEqual("101");
+	wrapper.find(".decrement").simulate("click");
+	expect(wrapper.find(".counter").text()).toEqual("100");
+	wrapper.find(".decrement").simulate("click");
+	expect(wrapper.find(".counter").text()).toEqual("99");
+
+	wrapper.find(".error").simulate("click");
+	expect(wrapper.find(".counter").text()).toEqual("99");
 });
