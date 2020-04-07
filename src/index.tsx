@@ -15,7 +15,13 @@ export type UseState<T = {}> = () => T;
 export type UseProvider<T> = () => Provider<T>;
 export type Consumer<T = {}> = React.FC<ConsumerProps<T>>;
 export type Context<T> = React.Context<T>;
-
+export type ReducerAction = {
+	type: string;
+	[x: string]: any;
+};
+export type Reducer<T> = (state: T, action: ReducerAction) => T;
+export type Dispatch = (action: ReducerAction) => void;
+export type UseDispatch = () => Dispatch;
 export interface ConsumerProps<T = {}> {
 	children: (state: T) => React.ReactElement | null;
 }
@@ -36,6 +42,10 @@ export interface Store<T = {}> {
 	useState: () => T;
 	useSelector: UseSelector<T>;
 	useUpdate: UseUpdate<T>;
+}
+
+export interface ReducerStore<T = {}> extends Store<T> {
+	useDispatch: UseDispatch;
 }
 
 export const withHooks = withComponentHooks as <T extends typeof React.Component>(
@@ -195,5 +205,24 @@ export function createStore<T extends Record<string | number | symbol, any>>(
 		useState,
 		useSelector,
 		useUpdate,
+	};
+}
+
+export function createReducer<T>(reducer: Reducer<T>, initialValue: () => T): ReducerStore<T> {
+	const Store = createStore(initialValue);
+
+	const useDispatch: UseDispatch = function () {
+		const update = Store.useUpdate();
+
+		return action => {
+			update(prevState => {
+				return reducer(prevState, action);
+			});
+		};
+	};
+
+	return {
+		...Store,
+		useDispatch,
 	};
 }
