@@ -191,9 +191,9 @@ export function createStore<T extends Record<string | number | symbol, any>>(
 
 		assertProvider(provider);
 
-		return state => {
+		return React.useCallback(state => {
 			provider.setState(state);
-		};
+		}, []);
 	};
 
 	return {
@@ -214,11 +214,11 @@ export function createReducer<T>(reducer: Reducer<T>, initialValue: () => T): Re
 	const useDispatch: UseDispatch = function () {
 		const update = Store.useUpdate();
 
-		return action => {
+		return React.useCallback(action => {
 			update(prevState => {
 				return reducer(prevState, action);
 			});
-		};
+		}, []);
 	};
 
 	return {
