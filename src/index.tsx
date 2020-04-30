@@ -26,7 +26,11 @@ export interface ConsumerProps<T = {}> {
 	children: (state: T) => React.ReactElement | null;
 }
 
-export interface Provider<T = {}> extends React.Component<{}, T> {
+interface ProviderProps<T> {
+	initialValue?: T;
+}
+
+export interface Provider<T = {}> extends React.Component<ProviderProps<T>, T> {
 	__$isProvider: boolean;
 	getSubscribeCount(): number;
 	subscribe(subscriber: Subscriber<T>): () => void;
@@ -61,13 +65,15 @@ function assertProvider(provider: Provider) {
 export function createStore<T extends Record<string | number | symbol, any>>(
 	initialValue: () => T
 ): Store<T> {
-	const StoreContext = React.createContext<Provider<T>>({} as Provider<T>);
-	const StateContext = React.createContext<T>({} as T);
 	const getInitialValue = (): T => {
 		return typeof initialValue === "function" ? initialValue() : initialValue;
 	};
+	const StoreContext = React.createContext<Provider<T>>({
+		state: getInitialValue(),
+	} as Provider<T>);
+	const StateContext = React.createContext<T>({} as T);
 
-	const Provider = class extends React.Component<{}, T> {
+	const Provider = class extends React.Component<ProviderProps<T>, T> {
 		protected _listeners: Subscriber<T>[] = [];
 		__$isProvider = true;
 
@@ -75,7 +81,7 @@ export function createStore<T extends Record<string | number | symbol, any>>(
 			return this._listeners.length;
 		}
 
-		state: Readonly<T> = getInitialValue();
+		state: Readonly<T> = this.props.initialValue || getInitialValue();
 
 		getState() {
 			return this.state;
@@ -131,8 +137,10 @@ export function createStore<T extends Record<string | number | symbol, any>>(
 	};
 
 	const Consumer: Consumer<T> = function (props) {
-		const [state, setState] = React.useState(getInitialValue());
 		const provider = React.useContext(StoreContext);
+		assertProvider(provider);
+
+		const [state, setState] = React.useState(provider.state);
 
 		assertProvider(provider);
 
@@ -154,10 +162,10 @@ export function createStore<T extends Record<string | number | symbol, any>>(
 	};
 
 	const useState: UseState<T> = function () {
-		const [state, setState] = React.useState(getInitialValue());
 		const provider = React.useContext(StoreContext);
-
 		assertProvider(provider);
+
+		const [state, setState] = React.useState(provider.state);
 
 		React.useEffect(() => {
 			return provider.subscribe((_, nextState) => {
@@ -169,10 +177,10 @@ export function createStore<T extends Record<string | number | symbol, any>>(
 	};
 
 	const useSelector: UseSelector<T> = function useSelector(selector) {
-		const [state, setState] = React.useState(selector(getInitialValue()));
 		const provider = React.useContext(StoreContext);
-
 		assertProvider(provider);
+
+		const [state, setState] = React.useState(selector(provider.state));
 
 		React.useEffect(() => {
 			return provider.subscribe((_, nextState) => {
@@ -188,12 +196,14 @@ export function createStore<T extends Record<string | number | symbol, any>>(
 
 	const useUpdate: UseUpdate<T> = function () {
 		const provider = React.useContext(StoreContext);
-
 		assertProvider(provider);
 
-		return React.useCallback(state => {
-			provider.setState(state);
-		}, []);
+		return React.useCallback(
+			state => {
+				provider.setState(state);
+			},
+			[provider]
+		);
 	};
 
 	return {
@@ -214,11 +224,14 @@ export function createReducer<T>(reducer: Reducer<T>, initialValue: () => T): Re
 	const useDispatch: UseDispatch = function () {
 		const update = Store.useUpdate();
 
-		return React.useCallback(action => {
-			update(prevState => {
-				return reducer(prevState, action);
-			});
-		}, []);
+		return React.useCallback(
+			action => {
+				update(prevState => {
+					return reducer(prevState, action);
+				});
+			},
+			[update]
+		);
 	};
 
 	return {

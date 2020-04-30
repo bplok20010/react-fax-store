@@ -1,11 +1,12 @@
 {
 	"name": "react-fax-store",
-	"version": "1.3.0",
+	"version": "1.4.0",
 	"description": "react-fax-store",
 	"main": "cjs/index.js",
 	"module": "esm/index.js",
 	"types": "lib/index.d.ts",
 	"dependencies": {
+		"@babel/runtime": "^7.9.6",
 		"invariant": "^2.2.4",
 		"react": "^16.13.1",
 		"with-component-hooks": "^1.0.0"

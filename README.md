@@ -74,7 +74,7 @@ createStore(() => {
 ### `Provider`
 
 ```jsx
-<Store.Provider>
+<Store.Provider initialValue={{name: 'react-fax-store'}}>
     ...
 </Store.Provider>
 
@@ -184,7 +184,6 @@ dispatch({
 ## interface
 
 ```ts
-
 export declare type Update<T = {}> = <K extends keyof T>(state: ((prevState: Readonly<T>) => Pick<T, K> | T | null) | Pick<T, K> | T | null) => void;
 export declare type Subscriber<T = {}> = (prevState: Readonly<T>, nextState: Readonly<T>) => void;
 export declare type UseSelector<T = {}> = <S extends (state: T) => any>(selector: S) => ReturnType<S>;
@@ -203,7 +202,10 @@ export declare type UseDispatch = () => Dispatch;
 export interface ConsumerProps<T = {}> {
     children: (state: T) => React.ReactElement | null;
 }
-export interface Provider<T = {}> extends React.Component<{}, T> {
+interface ProviderProps<T> {
+    initialValue?: T;
+}
+export interface Provider<T = {}> extends React.Component<ProviderProps<T>, T> {
     __$isProvider: boolean;
     getSubscribeCount(): number;
     subscribe(subscriber: Subscriber<T>): () => void;
@@ -225,7 +227,6 @@ export interface ReducerStore<T = {}> extends Store<T> {
 export declare const withHooks: <T extends typeof React.Component>(component: T) => T;
 export declare function createStore<T extends Record<string | number | symbol, any>>(initialValue: () => T): Store<T>;
 export declare function createReducer<T>(reducer: Reducer<T>, initialValue: () => T): ReducerStore<T>;
-
 
 ```
 
@@ -255,7 +256,7 @@ function Info(){
 
 function App(){
     return (
-        <Store.Provider>
+        <Store.Provider initialValue={{name: 'test'}}>
             <Info />
         </Store.Provider>
     );

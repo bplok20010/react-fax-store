@@ -117,6 +117,37 @@ test("render Provider without child update", () => {
 	});
 });
 
+test("Provider with initialValue ", () => {
+	const data = {
+		name: "provider",
+	};
+
+	const Context = createStore(() => data);
+
+	function MyComponent() {
+		const state = Context.useState();
+		return <div>{state.name}</div>;
+	}
+
+	class RootComponent extends React.Component {
+		render() {
+			return (
+				<Context.Provider
+					initialValue={{
+						name: "initialValue",
+					}}
+				>
+					<MyComponent />
+				</Context.Provider>
+			);
+		}
+	}
+
+	const wrapper = mount(<RootComponent />);
+
+	expect(wrapper.text()).toEqual("initialValue");
+});
+
 test("useState&useUpdate", () => {
 	const data = {
 		v: 1,
